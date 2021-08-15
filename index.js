@@ -4,7 +4,9 @@ require('dotenv').config()
 const cors =require('cors');
 const {notFound, errorHandler} = require('./middlewares/errorMiddleware');
 const userRoutes = require('./routes/userRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 const productRoutes = require('./routes/ProductRoute');
+
 
 const app = express()
 
@@ -12,6 +14,7 @@ app.use(cors())
 app.use(express.json())
 
 app.use(userRoutes)
+app.use(orderRoutes)
 app.use(productRoutes)
 app.use(notFound)
 app.use(errorHandler)
