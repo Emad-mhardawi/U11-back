@@ -2,6 +2,23 @@ const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
 const generateToken = require("../utils/generateToken");
 const bcrypt = require('bcrypt');
+const nodemailer = require("nodemailer");
+const sendgridTransport = require("nodemailer-sendgrid-transport");
+
+
+
+// initialize nodemailer transporter
+const transporter = nodemailer.createTransport(
+  sendgridTransport({
+    auth: {
+      api_key: process.env.SEND_GRID_KEY,
+    },
+  })
+);
+
+
+
+
 
 //@ route: POST/  /register
 //@ description: add new user
@@ -31,10 +48,18 @@ exports.postAddNewUser = asyncHandler(async (req, res, next) => {
     throw new Error("user already exists");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 12)
+  const hashedPassword = (await bcrypt.hash(password, 12)).toString();
 
   const user = await User.create({email,password:hashedPassword,confirmPassword})
   if(user){
+    //// send email to user after creating an account successfully
+    transporter.sendMail({
+      to:user.email,
+      from: "emad.valencia.c.f@gmail.com",
+      subject: "Signup succeeded!",
+      html: "<h1> you successfully signed up </h1>",
+    });
+    
     res.status(200).json(user)
   } else{
     res.status(400);
@@ -51,14 +76,13 @@ exports.postAddNewUser = asyncHandler(async (req, res, next) => {
 exports.postLoginUser = asyncHandler(async(req, res, next)=>{
   const { email, password } = req.body;
   const user = await User.findOne({email});
-
   if(!user){
     res.status(404);
     throw new Error("no account is attached with this email");
   }
 
-  //check if the provided password match the password in the database
-  const passwordMatch = await bcrypt.compare(password, user.password);
+   //check if the provided password match the password in the database
+   const passwordMatch = await bcrypt.compare(password, user.password);
 
   if (user && passwordMatch) {
     res.json({
