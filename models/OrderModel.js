@@ -13,11 +13,6 @@ const OrderSchema = Schema({
         type:String
     },
 
-    productDescription:{
-        type: String,
-        required: true
-    },
-
    
     price:{
         type: Number,

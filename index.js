@@ -6,15 +6,32 @@ const {notFound, errorHandler} = require('./middlewares/errorMiddleware');
 const userRoutes = require('./routes/userRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const productRoutes = require('./routes/ProductRoute');
-
+const orderController = require('./controllers/orderController')
 
 const app = express()
 
 app.use(cors())
-app.use(express.json())
 
-app.use(userRoutes)
+
+/*
+// Use JSON parser for all non-webhook routes
+app.use((req, res, next) => {
+    if (req.originalUrl === '/webhook') {
+        console.log(req.originalUrl)
+      next();
+    } else {
+      express.json()(req, res, next);
+    }
+  });
+*/
+
+
+app.post('/webhook', orderController.webhook )
+
+app.use(express.json())
 app.use(orderRoutes)
+app.use(userRoutes)
+
 app.use(productRoutes)
 app.use(notFound)
 app.use(errorHandler)
