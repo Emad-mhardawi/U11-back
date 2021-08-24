@@ -1,7 +1,7 @@
 const Product = require("../models/ProductModel");
 const Review = require('../models/ReviewModel');
 const asyncHandler = require("express-async-handler");
-const bcrypt = require('bcrypt');
+
 
 
 
@@ -9,16 +9,17 @@ const bcrypt = require('bcrypt');
 //@ description: add new product
 //@ access: Private
 exports.postAddNewProduct = asyncHandler(async(req,res,next)=>{
-    const {productName, brand, inStock, price, description, rating, comments, imageUrl} = req.body;
-    const product = await Product.create({productName, brand, inStock, price, description, rating, comments, imageUrl});
+  const {productName, brand, inStock, price, description, rating, comments, imageUrl} = req.body;
+  const product = await Product.create({productName, brand, inStock, price, description, rating, comments, imageUrl});
 
-    if(product){
-			res.status(200).json(product)
-    };
-    if(!product){
-			res.status(400);
-			throw new Error('something went wrong!')
-    };
+	if(product){
+		res.status(200).json(product)
+	};
+
+  if(!product){
+		res.status(400);
+		throw new Error('something went wrong!')
+  };
 });
 
 
@@ -27,18 +28,46 @@ exports.postAddNewProduct = asyncHandler(async(req,res,next)=>{
 //@ description: get all products
 //@ access: public
 exports.getProducts =asyncHandler(async(req, res, next)=>{
-	const products = await Product.find({});
+	try{
+    const queryObj = {...req.query}
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach(el=> delete queryObj[el]);
+    
+		let queryString =JSON.stringify(queryObj);
+    queryString= queryString.replace(/\b(gte|gt|lte|lt)\b/g, match=>`$${match}`);
+    let query =  Product.find(JSON.parse(queryString));
+
+	///// sorting
+  if(req.query.sort){
+		query =  query.sort(req.query.sort)
+  }
+
+  //// pagination
+  	const page = req.query.page * 1 || 1;
+  	const limit = req.query.limit *1 || 12;
+  	const skip = (page -1) * limit
+    query = query.skip(skip).limit(limit)
+		let numberOfProducts = await Product.countDocuments();
+    const pagesCount = Math.ceil(numberOfProducts / limit)
+    
+		
+		const products = await query;
+   
 	if(products){
-    res.status(200).json(products)
+    res.status(200).json({pagesCount, products })
 	}
+}catch(err){
+    console.log(err)
+}
 })
+
 
 
 //@ route: GET/  /get-Latest-products
 //@ description: get latest products
 //@ access: public
 exports.getLatestProducts =asyncHandler(async(req, res, next)=>{
-    const products = await Product.find({}).limit(8);
+    const products = await Product.find({}).limit(8).sort('-createdAt');
     res.status(200).json(products)
 })
 
