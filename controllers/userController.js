@@ -4,7 +4,8 @@ const generateToken = require("../utils/generateToken");
 const bcrypt = require('bcrypt');
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
-const crypto = require('crypto')
+const crypto = require('crypto');
+const { use } = require("../routes/userRoutes");
 
 
 // initialize nodemailer transporter
@@ -15,8 +16,6 @@ const transporter = nodemailer.createTransport(
     },
   })
 );
-
-
 
 
 
@@ -39,7 +38,7 @@ exports.postAddNewUser = asyncHandler(async (req, res, next) => {
 
   if (password !== confirmPassword) {
     res.status(400);
-    throw new Error("password dose not match");
+    throw new Error("passwords don't  match");
   }
 
   const userExist = await User.findOne({ email: email });
@@ -70,6 +69,7 @@ exports.postAddNewUser = asyncHandler(async (req, res, next) => {
 
 
 
+
 //@ route: POST/  /login
 //@ description: Auth user & get JWT
 //@ access: public
@@ -97,6 +97,35 @@ exports.postLoginUser = asyncHandler(async(req, res, next)=>{
     throw new Error("invalid email or password");
   }
 })
+
+
+
+
+//@ route: POST/  /login
+//@ description: Auth user & get JWT
+//@ access: public
+exports.getUserInfo = asyncHandler(async(req, res, next)=>{
+  
+  try{
+    const userId = req.query.userId;
+    const user = await User.findById(userId);
+    if(user){
+      res.status(200).json({
+        email:user.email,
+        username: user.username,
+        address:user.address,
+        phoneNumber:user.phoneNumber
+      })
+    }else{
+      res.status(404).json({message:'user not found'})
+    }
+    
+  }catch(err){
+    res.status(500).json({message: err.message})
+  }
+})
+
+
  
 
 //@ route: Post /forgotPassword
@@ -107,19 +136,19 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
     res.status(400);
     throw new Error("please provide an email");
   }
-
+  
   /// find user
   const user = await User.findOne({email:email});
   if(!user){
-    res.status(404);
-    throw new Error("no user attached with this email");
+    res.json({status:'fail', message:'"no user attached with this email"'});
   }
-
+  
   //2 generate the random reset token
-  const resetToken = await crypto.randomBytes(32).toString('hex');
-  user.passwordResetToken= await crypto.createHash("sha256").update(resetToken).digest('hex');
-  user.passwordResetExpires = await Date.now() + (10 * 60 * 1000);
-  user.save();
+  if(user){
+    const resetToken = await crypto.randomBytes(32).toString('hex');
+    user.passwordResetToken= await crypto.createHash("sha256").update(resetToken).digest('hex');
+    user.passwordResetExpires = await Date.now() + (10 * 60 * 1000);
+    user.save();
 
   //3 Send reset link to user email
   const resetUrl = await `http://localhost:3000/resetPassword?resetToken=${resetToken}`;
@@ -137,36 +166,40 @@ exports.forgotPassword = asyncHandler(async(req,res,next)=>{
 
   if(resetEmail){
     res.status(200).json({
+      status:'success',
       message: "we have sent a reset password link to your email",
     });
   }else{
-    res.status(200).json({
+    res.status(500).json({
+      status:'fail',
       message: "something went wrong! please try again",
     });
   }
-})
+    
+  }
+ })
 
 
+
+ //@ route: POST/  /resetPassword
+//@ description: change the password 
 exports.resetPassword = asyncHandler(async (req, res, next) => {
-  const { password, confirmedPassword} = req.body;
+  const { password, confirmPassword} = req.body;
   const resetToken = req.query.resetToken;
-  
   if (!password || password.length < 6) {
     res.status(400);
-    throw new Error(
-      "password is required and have to be at least 6 characters long"
-      );
+    throw new Error("password is required and have to be at least 6 characters long");
     }
     
-  if (password !== confirmedPassword) {
+  if (password !== confirmPassword) {
     res.status(400);
     throw new Error("password dose not match");
   }
   
   // 1- get user based on the token
-const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex')
-
-const user = await User.findOne({
+  const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+  
+  const user = await User.findOne({
   passwordResetToken: hashedToken,
   passwordResetExpires: {$gt: Date.now()}
 })
@@ -175,16 +208,53 @@ if(!user){
   res.json({message: 'your link has expired'})
 }
 
-// 2- if token has not expired, and there is a user set new password
-if(user){
+  // 2- if token  not expired, and there is a user set new password
+  if(user){
   const hashedPassword = (await bcrypt.hash(password, 12)).toString();
   res.json({message: 'you have reset your password successfully'})
   user.password = hashedPassword
- user.passwordResetToken = undefined
- user.passwordResetExpires=undefined
- user.save()
+  user.passwordResetToken = undefined
+  user.passwordResetExpires=undefined
+  user.save()
 }
- 
- 
- 
+});
+
+
+//@ route: PUT /profile
+//@ description: update user profile
+//@ access: private
+exports.updateUserProfile = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.username = req.body.username || user.username;
+    user.email = req.body.email || user.email;
+    user.address.city = req.body.city || user.address.city;
+    user.address.country = req.body.country || user.address.country;
+    user.address.region = req.body.region || user.address.region;
+    user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
+    
+    if (req.body.newPassword) {
+      if(req.body.newPassword !== req.body.confirmNewPassword){
+        res.status(400);
+        throw new Error("passwords don't match");
+      }
+
+      const hashedPassword = (
+        await bcrypt.hash(req.body.newPassword, 12)
+      ).toString();
+      user.password = hashedPassword;
+    }
+
+  const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+    });
+  }else{
+    res.status(404);
+    throw new Error("some thing went wrong");
+  }
 });
