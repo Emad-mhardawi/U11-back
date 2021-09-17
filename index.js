@@ -20,7 +20,9 @@ app.post('/webhook',express.raw({type: "application/json"}), orderController.web
 app.use(express.json())
 
 
-
+app.use('/',(req,res,next)=>{
+    res.send('U11 api')
+})
   
 
 
