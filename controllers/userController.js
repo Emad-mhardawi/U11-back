@@ -59,7 +59,11 @@ exports.postAddNewUser = asyncHandler(async (req, res, next) => {
       html: "<h1> you successfully signed up </h1>",
     });
     
-    res.status(200).json(user)
+    res.status(200).json({
+      isAdmin:user.isAdmin,
+      _id:user._id,
+      email:user.email
+    })
   } else{
     res.status(400);
     throw new Error("invalid user data, something went wrong");
@@ -101,9 +105,9 @@ exports.postLoginUser = asyncHandler(async(req, res, next)=>{
 
 
 
-//@ route: POST/  /login
-//@ description: Auth user & get JWT
-//@ access: public
+//@ route: get/  /userInfo
+//@ description: get user data
+//@ access: privet
 exports.getUserInfo = asyncHandler(async(req, res, next)=>{
   
   try{

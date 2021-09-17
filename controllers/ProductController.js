@@ -77,11 +77,20 @@ exports.getLatestProducts =asyncHandler(async(req, res, next)=>{
 //@ access: public
 exports.postAddReview =asyncHandler(async(req, res, next)=>{
 	const {starsCount, comment, name, email, productId} = req.body;
-
-console.log(starsCount, comment, name, email, productId)
     const product = await Product.findById(productId);
+ 
     if(product){
         const review = await Review.create({starsCount, comment, product:productId, name:name });
+        /// update product overall rating
+        const productReviews = await Review.find({product:product._id});
+        const averageStarCount = productReviews.map(review =>review.starsCount)
+        .reduce((accumulator, currentValue)=>{
+          return accumulator + currentValue 
+      },0) / productReviews.length || 0;
+
+      product.rating= Math.round(averageStarCount);
+      product.save()
+
 				if(review){
 					res.status(200).json({message:'thank you for your review'})
 				}else{
@@ -95,10 +104,9 @@ console.log(starsCount, comment, name, email, productId)
 
 
 
-
-
-
-
+//@ route: GET/  //getProduct
+//@ description: GET A SINGLE PRODUCT
+//@ access: public
 exports.getProduct =asyncHandler(async(req, res, next)=>{
     const productId = req.query.product_id;
     const product = await Product.findById(productId);
