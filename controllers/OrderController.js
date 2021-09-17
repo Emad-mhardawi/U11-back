@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport(
 //@ route: POST/  /create-checkout-session
 //@ description: create checkout session
 //@ access: public
-const DOMAIN = process.env.FRONT_END_REDIRECT_URL;;
+const DOMAIN = process.env.FRONT_END_REDIRECT_URL;
 exports.checkoutSession = asyncHandler(async (req, res, next) => {
   /// get card products from font end
   const cartProducts = req.body.cartProducts;
@@ -90,7 +90,7 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
     mode: "payment",
     allow_promotion_codes: true,
     success_url: `${DOMAIN}/order-success`,
-    cancel_url: `${DOMAIN}?canceled=true`,
+    cancel_url: `${DOMAIN}/dddd`,
   });
 
   res.json({ session_id: session.id });
