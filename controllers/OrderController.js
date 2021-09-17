@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport(
 //@ route: POST/  /create-checkout-session
 //@ description: create checkout session
 //@ access: public
-const DOMAIN = "http://localhost:3000";
+const DOMAIN = process.env.FRONT_END_REDIRECT_URL;;
 exports.checkoutSession = asyncHandler(async (req, res, next) => {
   /// get card products from font end
   const cartProducts = req.body.cartProducts;
