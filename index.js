@@ -12,17 +12,14 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express()
 
 
-app.use(cors())
+
 
 app.post('/webhook',express.raw({type: "application/json"}), orderController.webhook )
-
+app.use(cors())
 
 app.use(express.json())
 
-app.get('/', (req, res,next)=>{
-    res.send('hello');
-    next()
-})
+
 
 app.use(orderRoutes)
 app.use(userRoutes)
