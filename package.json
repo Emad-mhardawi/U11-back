@@ -3,13 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "engines": {
-    "node": "14.17.5"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    
-    "dev":"nodemon index.js"
+    "dev": "nodemon index.js"
   },
   "author": "Emad Mhardawi",
   "license": "ISC",
@@ -20,12 +16,15 @@
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.13.5",
+    "mongoose": "^5.13.9",
     "nodemailer": "^6.6.3",
     "nodemailer-sendgrid-transport": "^0.2.0",
-    "stripe": "^8.169.0"
+    "stripe": "^8.176.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"
+  },
+  "engines": {
+    "node": "14.17.5"
   }
 }
