@@ -89,8 +89,8 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
     line_items: create_line_items,
     mode: "payment",
     allow_promotion_codes: true,
-    success_url: `http://localhost:3000/`,
-    cancel_url: `http://localhost:3000/`,
+    success_url: `${DOMAIN}/order-success`,
+    cancel_url: `${DOMAIN}/order-failed`,
   });
 
   res.json({ session_id: session.id });
