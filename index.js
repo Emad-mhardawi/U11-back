@@ -24,8 +24,7 @@ app.use(express.json())
 app.use(orderRoutes)
 app.use(userRoutes)
 app.use(productRoutes)
-app.use(notFound)
-app.use(errorHandler)
+
 
 /// connect to data base
 connectDb();
