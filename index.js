@@ -11,15 +11,15 @@ const app = express()
 
 
 app.use(cors())
-
+app.get('/', (req,res,next)=>{
+    res.send('hello')
+})
 /// expect request body to be in a raw format
 app.post('/webhook',express.raw({type: "application/json"}), orderController.webhook )
 
 app.use(express.json())
 
-app.get('/', (req,res,next)=>{
-    res.send('hello')
-})
+
 
 app.use(orderRoutes)
 app.use(userRoutes)
