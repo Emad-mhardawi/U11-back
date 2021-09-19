@@ -17,6 +17,10 @@ app.post('/webhook',express.raw({type: "application/json"}), orderController.web
 
 app.use(express.json())
 
+app.get('/', (req,res,next)=>{
+    res.send('hello')
+})
+
 app.use(orderRoutes)
 app.use(userRoutes)
 app.use(productRoutes)
