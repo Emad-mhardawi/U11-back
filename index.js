@@ -4,16 +4,14 @@ require('dotenv').config()
 const cors =require('cors');
 const {notFound, errorHandler} = require('./middlewares/errorMiddleware');
 const userRoutes = require('./routes/userRoutes');
-const orderRoutes = require('./routes/orderRoutes');
+const orderRoutes = require('./routes/OrderRoutes');
 const productRoutes = require('./routes/ProductRoute');
 const orderController = require('./controllers/OrderController')
 const app = express()
 
 
 app.use(cors())
-app.get('/', (req,res,next)=>{
-    res.send('hello')
-})
+
 /// expect request body to be in a raw format
 app.post('/webhook',express.raw({type: "application/json"}), orderController.webhook )
 
