@@ -1,7 +1,5 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const asyncHandler = require("express-async-handler");
-const bodyParser = require("body-parser");
-const express = require("express");
 const User = require("../models/UserModel");
 const Order = require("../models/OrderModel");
 const Product = require("../models/ProductModel");
@@ -17,9 +15,11 @@ const transporter = nodemailer.createTransport(
   })
 );
 
+//////////////////////
 //@ route: POST/  /create-checkout-session
 //@ description: create checkout session
 //@ access: public
+/////////////////////
 const DOMAIN = process.env.FRONT_END_REDIRECT_URL;
 exports.checkoutSession = asyncHandler(async (req, res, next) => {
   /// get card products from font end
@@ -133,11 +133,11 @@ const fulfillOrder = async (session) => {
 
 
 
-
+////////////////////
 //@ route: POST/  /webhook
 //@ description: handling events coming from stripe to confirm payments
 //@ access: private
-
+/////////////////////
 const endpointSecret = process.env.WEB_HOOK_SECRET;
 /// stripe require the row body to construct the event
 exports.webhook = (req, res, next) => {
