@@ -96,16 +96,21 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   res.json({ session_id: session.id });
 });
 
+
+
+
 ///// this function will execute when we receive checkout.session.completed from stripe
 const fulfillOrder = async (session) => {
   /// find the user who ordered in case he has an account
   const userEmail = session.customer_details.email;
   const user = await User.findOne({ email: userEmail });
-
   /// find the order and add missing data and change payment status to paid
   const orderId = session.client_reference_id;
   const order = await Order.findById(orderId);
-  order.user = user._id;
+  if(user){
+    order.user = user._id;
+  }
+  
   order.userName = session.customer_details.email;
   order.email = session.customer_details.email;
   order.totalPrice = session.amount_total / 100;
@@ -115,7 +120,7 @@ const fulfillOrder = async (session) => {
     id: session.payment_intent,
     status: session.payment_status,
   };
-  order.paidAt = new Date();
+  order.paidAt = new Date(); 
   order.save();
 
   //// send email to user to confirm payment
@@ -143,7 +148,6 @@ const endpointSecret = process.env.WEB_HOOK_SECRET;
 exports.webhook = (req, res, next) => {
   const sig = req.headers["stripe-signature"];
   const payload = req.body;
-
   let event;
   try {
     event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
